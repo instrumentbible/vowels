@@ -1,0 +1,222 @@
+<!doctype html>
+<html>
+	<head>
+		<title>tune.js</title>
+		<meta charset="utf-8" />
+		<link href='./css/style.css' rel='stylesheet'>
+	</head>
+	<body>
+		<select id="audioSource"></select>
+		<button onclick="toggleLiveInput()">🎤</button>
+		<div id="detector" class="vague">
+			<div class="pitch"><span id="pitch">--</span> Hz</div>
+			<div class="note"><span id="note">--</span></div>
+			<canvas id="output" width=300 height=42></canvas>
+			<div id="detune"><input id="detune_amt"></div>
+		</div>
+		<div>
+			<select id="temperament">
+				<option value="equal" selected>Equal</option>
+				<option value="pythagorean"	>Pythagorean	</option>
+				<option value="meantone"	>Meantone		</option>
+				<option value="werckmeisterI">Werkmeister I	</option>
+				<option value="werckmeisterII">Werkmeister II	</option>
+				<option value="werckmeisterIII">Werkmeister III</option>
+			</select>
+			<label for="temperament">temperament</label>
+		</div>
+		<div>
+			<input id="fundamental" type="number" step="0.1" value="440" inputmode="decimal"></input>
+			<label for="fundamental">fundamental</label>
+		</div>
+		<script src="js/tune.js"></script>
+		
+		
+		
+		
+		
+		<p>create training data</p>
+		<button id="a">a</button>
+		<button id="e">e</button>
+		<button id="i">i</button>
+		<button id="o">o</button>
+		<button id="u">u</button>
+
+		
+		
+		<script>
+			
+			
+			var harmonics = [];
+			var harmonicsDecibels = [];
+			var tempData = []
+
+		 // create tuner
+		 var tuner = new Tune({
+			 temperament: "equal",
+			 fundamental: 440
+		 });
+		
+		 // set the temperament
+		 //tuner.setTemperament("meantone");
+		 //tuner.tune(44);
+		 //tuner.setWavelength(0.777);
+		 
+		 // listen for dropdown change
+		 let dropdown = document.querySelector('#temperament');
+		 if (dropdown) dropdown.addEventListener('change', function(event) {
+			 console.log(event.target.value);
+			 tuner.setTemperament(event.target.value);
+		 });
+		
+		// listen for fundamental change
+		let fundamental = document.querySelector('#fundamental');
+		if (fundamental) fundamental.addEventListener('input', function(event) {
+			console.log(event.target.value);
+			tuner.setFundamental(event.target.value);
+		});
+				  
+				
+		function updatePitch( time ) {
+			
+			
+			// Float32Array should be the same length as the frequencyBinCount
+			decibelArray = new Float32Array(analyser1.frequencyBinCount);
+			analyser1.getFloatFrequencyData(decibelArray);
+				
+			
+			
+			// console.log(decibelArray)
+			
+			
+			
+			
+			var cycles = new Array;
+			analyser.getFloatTimeDomainData( buf );
+			var ac = autoCorrelate( buf, audioContext.sampleRate );
+			if (ac == -1) {
+				detectorElem.className = "vague";
+				pitchElem.innerText = "--";
+				noteElem.innerText = "-";
+				detuneElem.className = "";
+				detuneAmount.innerText = "--";
+			} else {
+				detectorElem.className = "confident";
+				frequency = ac;
+				pitchElem.innerText = Math.round( frequency ) ;
+				var note =  Tune.noteFromPitch( frequency );
+				Tune.getNoteName(Tune.ftom(frequency))
+				noteElem.innerHTML = Tune.getNoteName(Tune.ftom(frequency) * -1);
+								
+								
+								
+				// current fundamental frequency (rounded)
+				var freq = Math.round(frequency)
+				
+				//console.log(freq);
+				
+				// get harmonics
+				
+				console.log(getHarmonics(freq))
+				console.log(harmonicsDecibels)
+
+				//tuner.harmonic(freq, 3);
+
+				
+				//console.log(decibelArray[freq]);
+
+				
+								
+				var detune = tuner.tune(frequency)
+				if (detune == 0 ) {
+					detuneElem.className = "";
+					detuneAmount.innerHTML = "--";
+				} else {
+					
+					
+					detuneAmount.value =  format(detune);
+				
+				
+				
+				
+				
+				}
+			}
+
+			if (!window.requestAnimationFrame){ window.requestAnimationFrame = window.webkitRequestAnimationFrame;}
+			rafID = window.requestAnimationFrame( updatePitch );
+		}
+								 
+		// add (+) if positive, and round to 4 decimals
+		function format(e){ return (e<0?"":"+") + (e).toFixed(0); }
+		
+		
+		
+		// get harmonics of fundamental
+		function getHarmonics(e){
+			
+			harmonics = [Tune.harmonic(e, 1), Tune.harmonic(e, 2), Tune.harmonic(e, 3), Tune.harmonic(e, 4), Tune.harmonic(e, 5), Tune.harmonic(e, 6), Tune.harmonic(e, 7), Tune.harmonic(e, 8), Tune.harmonic(e, 9), Tune.harmonic(e, 10), Tune.harmonic(e, 11), Tune.harmonic(e, 12), Tune.harmonic(e, 13), Tune.harmonic(e, 14), Tune.harmonic(e, 15), Tune.harmonic(e, 16), Tune.harmonic(e, 17), Tune.harmonic(e, 18), Tune.harmonic(e, 19), Tune.harmonic(e, 20), Tune.harmonic(e, 21), Tune.harmonic(e, 22), Tune.harmonic(e, 23), Tune.harmonic(e, 24), Tune.harmonic(e, 25), Tune.harmonic(e, 26), Tune.harmonic(e, 27), Tune.harmonic(e, 28), Tune.harmonic(e, 29), Tune.harmonic(e, 30)]
+			harmonics.forEach(calculateHarmonics);
+
+			//calculateHarmonics.forEach(normalize)
+			
+			return harmonics;
+		}
+		
+		
+		
+		
+		function calculateHarmonics(item, index) {
+			
+			harmonicsDecibels[index] = decibelArray[item]
+		// document.getElementById("demo").innerHTML += index + ":" + item + "<br>";
+		}
+		
+		
+		
+		// push data to json
+		
+// add listener to all buttons
+document.querySelectorAll('button').forEach(btn => {
+   btn.addEventListener('click', e => {
+	   tempData = [];
+	
+	   // wait 1 second
+	   setTimeout(function timer() {
+		   console.log("starting...")
+
+		   // push 2000 sets of data, at 25ms interval
+		   for (let i = 1; i < 100; i++) {
+			 setTimeout(function timer() {
+				 if(harmonicsDecibels[0] ){ tempData.push(harmonicsDecibels)   }
+				 console.log("training... step " + (i+ 1));
+				 if(i == 99){saveData()}
+			 }, i * 25);
+		   }
+	   }, 1000);
+	   
+	   function saveData(){
+		   console.log("training done")
+		   exportJSON(tempData, btn.id + '.json');
+	   }
+	});
+});
+		
+
+
+// normalize values in range of 0 to 1
+function normalize(val, max) { return (val - 0) / (max - 0); }
+
+
+	
+	// export json
+	function exportJSON(e, filename) {
+		let link = document.createElement('a');
+			link.setAttribute('href', 'data:application/json;charset=utf-8,'+ encodeURIComponent(JSON.stringify(e, undefined, 2)));
+			link.setAttribute('download', filename);
+			link.click();
+	}
+
+</script>
+	</body>
+</html>
