@@ -34,21 +34,28 @@
 		
 		
 		
-		
+		<hr>
 		<p>create training data</p>
 		<button id="a">a</button>
 		<button id="e">e</button>
 		<button id="i">i</button>
 		<button id="o">o</button>
 		<button id="u">u</button>
+<hr>
+<button id="saxophone">saxophone</button>
+<button id="flute">flute</button>
+<button id="trumpet">trumpet</button>
 
 		
 		
 		<script>
-			
+			var theData = {
+				harmonics : [],
+				decibels : []
+				
+			}
 			
 			var harmonics = [];
-			var harmonicsDecibels = [];
 			var tempData = []
 
 		 // create tuner
@@ -84,12 +91,7 @@
 			decibelArray = new Float32Array(analyser1.frequencyBinCount);
 			analyser1.getFloatFrequencyData(decibelArray);
 				
-			
-			
 			// console.log(decibelArray)
-			
-			
-			
 			
 			var cycles = new Array;
 			analyser.getFloatTimeDomainData( buf );
@@ -108,38 +110,19 @@
 				Tune.getNoteName(Tune.ftom(frequency))
 				noteElem.innerHTML = Tune.getNoteName(Tune.ftom(frequency) * -1);
 								
-								
-								
 				// current fundamental frequency (rounded)
 				var freq = Math.round(frequency)
-				
-				//console.log(freq);
-				
-				// get harmonics
-				
+
 				console.log(getHarmonics(freq))
-				console.log(harmonicsDecibels)
-
-				//tuner.harmonic(freq, 3);
-
+				console.log(theData.decibels)
 				
-				//console.log(decibelArray[freq]);
-
 				
-								
-				var detune = tuner.tune(frequency)
+				var detune = tuner.tune(frequency);
 				if (detune == 0 ) {
 					detuneElem.className = "";
 					detuneAmount.innerHTML = "--";
 				} else {
-					
-					
 					detuneAmount.value =  format(detune);
-				
-				
-				
-				
-				
 				}
 			}
 
@@ -155,53 +138,72 @@
 		// get harmonics of fundamental
 		function getHarmonics(e){
 			
-			harmonics = [Tune.harmonic(e, 1), Tune.harmonic(e, 2), Tune.harmonic(e, 3), Tune.harmonic(e, 4), Tune.harmonic(e, 5), Tune.harmonic(e, 6), Tune.harmonic(e, 7), Tune.harmonic(e, 8), Tune.harmonic(e, 9), Tune.harmonic(e, 10), Tune.harmonic(e, 11), Tune.harmonic(e, 12), Tune.harmonic(e, 13), Tune.harmonic(e, 14), Tune.harmonic(e, 15), Tune.harmonic(e, 16), Tune.harmonic(e, 17), Tune.harmonic(e, 18), Tune.harmonic(e, 19), Tune.harmonic(e, 20), Tune.harmonic(e, 21), Tune.harmonic(e, 22), Tune.harmonic(e, 23), Tune.harmonic(e, 24), Tune.harmonic(e, 25), Tune.harmonic(e, 26), Tune.harmonic(e, 27), Tune.harmonic(e, 28), Tune.harmonic(e, 29), Tune.harmonic(e, 30)]
-			harmonics.forEach(calculateHarmonics);
-
-			//calculateHarmonics.forEach(normalize)
 			
-			return harmonics;
+			theData = {
+				harmonics : [],
+				decibels : [],
+				normal : []
+
+			}
+			
+			// calculate harmonics, then get the decibel values for each harmonic
+			var harm		= new Promise((resolve, reject) => {
+				var x		= new Promise((resolve, reject) => {
+					theData.harmonics = [Tune.harmonic(e, 1), Tune.harmonic(e, 2), Tune.harmonic(e, 3), Tune.harmonic(e, 4), Tune.harmonic(e, 5), Tune.harmonic(e, 6), Tune.harmonic(e, 7), Tune.harmonic(e, 8), Tune.harmonic(e, 9), Tune.harmonic(e, 10), Tune.harmonic(e, 11), Tune.harmonic(e, 12), Tune.harmonic(e, 13), Tune.harmonic(e, 14), Tune.harmonic(e, 15), Tune.harmonic(e, 16), Tune.harmonic(e, 17), Tune.harmonic(e, 18), Tune.harmonic(e, 19), Tune.harmonic(e, 20), Tune.harmonic(e, 21), Tune.harmonic(e, 22), Tune.harmonic(e, 23), Tune.harmonic(e, 24), Tune.harmonic(e, 25), Tune.harmonic(e, 26), Tune.harmonic(e, 27), Tune.harmonic(e, 28), Tune.harmonic(e, 29), Tune.harmonic(e, 30)]
+					resolve();
+				});
+				var y		= new Promise((resolve, reject) => {
+					theData.harmonics.forEach(calculateHarmonics);
+					resolve();
+				});
+				var z		= new Promise((resolve, reject) => {
+					// normalize...?
+					//calculateHarmonics.forEach(normalize)
+					resolve();
+				} );
+				
+				x.then(() => { y.then(() => {  z.then(() => { resolve() })})});
+			});
+		
+			harm
+			
+			return theData.harmonics;
 		}
-		
-		
 		
 		
 		function calculateHarmonics(item, index) {
-			
-			harmonicsDecibels[index] = decibelArray[item]
-		// document.getElementById("demo").innerHTML += index + ":" + item + "<br>";
+			theData.decibels.push(decibelArray[item])
+			// document.getElementById("demo").innerHTML += index + ":" + item + "<br>";
 		}
 		
-		
-		
 		// push data to json
-		
-// add listener to all buttons
-document.querySelectorAll('button').forEach(btn => {
-   btn.addEventListener('click', e => {
-	   tempData = [];
-	
-	   // wait 1 second
-	   setTimeout(function timer() {
-		   console.log("starting...")
+				
+		// add listener to all buttons
+		document.querySelectorAll('button').forEach(btn => {
+		   btn.addEventListener('click', e => {
+			   tempData = [];
+			
+			   // wait 1 second
+			   setTimeout(function timer() {
+				   console.log("starting...")
 
-		   // push 2000 sets of data, at 25ms interval
-		   for (let i = 1; i < 100; i++) {
-			 setTimeout(function timer() {
-				 if(harmonicsDecibels[0] ){ tempData.push(harmonicsDecibels)   }
-				 console.log("training... step " + (i+ 1));
-				 if(i == 99){saveData()}
-			 }, i * 25);
-		   }
-	   }, 1000);
-	   
-	   function saveData(){
-		   console.log("training done")
-		   exportJSON(tempData, btn.id + '.json');
-	   }
-	});
-});
-		
+				   // push 2000 sets of data, at 25ms interval
+				   for (let i = 1; i < 100; i++) {
+					 setTimeout(function timer() {
+						 if(theData.decibels[0] ){ tempData.push(theData.decibels)   }
+						 console.log("training... step " + (i+ 1));
+						 if(i == 99){saveData()}
+					 }, i * 25);
+				   }
+			   }, 1000);
+			   
+			   function saveData(){
+				   console.log("training done")
+				   exportJSON(tempData, btn.id + '.json');
+			   }
+			});
+		});
+				
 
 
 // normalize values in range of 0 to 1
