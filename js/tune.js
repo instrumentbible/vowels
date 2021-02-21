@@ -466,7 +466,7 @@ function firstClick(e) {
 
 	
 		
-	navigator.mediaDevices.getUserMedia({ video:false, audio: !this.isCameraAccessGranted, }).then(() => { enumm(); });
+	//navigator.mediaDevices.getUserMedia({ video:false, audio: !this.isCameraAccessGranted, }).then(() => { enumm(); });
 	updatePitch()
 		//toggleLiveInput()
 }
@@ -485,8 +485,8 @@ function toggleLiveInput() {
 function gotStream(stream) {
 	thestream = stream
 	mediaStreamSource = audioContext.createMediaStreamSource(stream);
-		mediaStreamSource.connect( analyser );
-		mediaStreamSource.connect( analyser1 );
+		//mediaStreamSource.connect( analyser );
+		//mediaStreamSource.connect( analyser1 );
 }
 		 
 function handleError(error) { console.error("Error: ", error); }
@@ -495,7 +495,7 @@ function getUserMedia(constraints, callback) {
 	try {
 		
 		console.log(audioSelect.options[audioSelect.selectedIndex].value)
-		navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+		//navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 		constraints = {
 		audio:{
 			deviceId: { exact: audioSelect.options[audioSelect.selectedIndex].value },
@@ -513,6 +513,6 @@ function getUserMedia(constraints, callback) {
 		video:false
 		}
 		//navigator.getUserMedia(dictionary, callback, error);
-		navigator.mediaDevices.getUserMedia(constraints).then(gotStream).catch(handleError);
+		//navigator.mediaDevices.getUserMedia(constraints).then(gotStream).catch(handleError);
 	} catch (e) { /*   alert('getUserMedia threw exception :' + e); */ }
 }

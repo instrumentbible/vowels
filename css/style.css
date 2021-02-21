@@ -2,7 +2,6 @@
 
 body { font: 14pt 'Alike';}
 #note { font: 164px  Opus_Chords; }
-.droptarget { background-color: #348781}
 div.confident { color: black; }
 div.vague { color: lightgrey; }
 #note { display: inline-block; height:180px; text-align: left;}
@@ -15,17 +14,15 @@ div.vague { color: lightgrey; }
 .sharp #sharp { display: inline; }
 
 input, select{
-	width: 200px;
-	font-size:26px;
-	font-family: 'Courier New', monospace;
-	font-weight:900;
 	padding:0.1em !important
 }
 button{font-size:20px;}
 
 .pitch{
 	font-size:26px;
-	font-family: 'Courier New', monospace;
-	font-weight:900;
 	padding:0.1em
+}
+
+
+*{font-family:  'Helvetica';
 }

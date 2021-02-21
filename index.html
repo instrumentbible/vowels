@@ -1,47 +1,61 @@
 <!doctype html>
 <html>
 	<head>
-		<title>tune.js</title>
+		<title>instrument detection</title>
 		<meta charset="utf-8" />
 		<link href='./css/style.css' rel='stylesheet'>
 	</head>
 	<body>
 		<select id="audioSource"></select>
-		<button onclick="toggleLiveInput()">🎤</button>
 		<div id="detector" class="vague">
 			<div class="pitch"><span id="pitch">--</span> Hz</div>
 			<div class="note"><span id="note">--</span></div>
 			<canvas id="output" width=300 height=42></canvas>
 			<div id="detune"><input id="detune_amt"></div>
 		</div>
-		<div>
-			<select id="temperament">
-				<option value="equal" selected>Equal</option>
-				<option value="pythagorean"	>Pythagorean	</option>
-				<option value="meantone"	>Meantone		</option>
-				<option value="werckmeisterI">Werkmeister I	</option>
-				<option value="werckmeisterII">Werkmeister II	</option>
-				<option value="werckmeisterIII">Werkmeister III</option>
-			</select>
-			<label for="temperament">temperament</label>
-		</div>
-		<div>
-			<input id="fundamental" type="number" step="0.1" value="440" inputmode="decimal"></input>
-			<label for="fundamental">fundamental</label>
-		</div>
+	
 		<script src="js/tune.js"></script>
 		
 		
 		
 		
-		<hr>
-		<p>create training data</p>
-		<button id="a">a</button>
-		<button id="e">e</button>
-		<button id="i">i</button>
-		<button id="o">o</button>
-		<button id="u">u</button>
+
+	<hr>
+	<h2>create training data</h2>
+
+	<div>
+		<select id="instrument">
+			<option value="bassoon">bassoon</option>
+			<option value="cello">cello</option>
+			<option value="clarinet">clarinet</option>
+			<option value="euphonium">euphonium</option>
+			<option value="flute">flute</option>
+			<option value="horn">horn</option>
+			<option value="marimba">marimba</option>
+			<option value="oboe">oboe</option>
+			<option value="recorder">recorder</option>
+			<option value="saxophone">saxophone</option>
+			<option value="trombone">trombone</option>
+			<option value="trumpet">trumpet	</option>
+			<option value="tuba">tuba	</option>
+			<option value="violin">violin	</option>
+		</select>
+		<label for="instrument">instrument</label>
+	</div>
+	
+	
+ <input type="file" onchange="readFile(this.files);">
+<br>
+	 <button id="analyze">analyze</button>
+	
+	
+	
+<script>
+	
+</script>
+
 <hr>
+
 <button id="saxophone">saxophone</button>
 <button id="flute">flute</button>
 <button id="trumpet">trumpet</button>
@@ -49,6 +63,36 @@
 		
 		
 		<script>
+			
+			
+			// audio file buffer source
+			var source
+			var playing;
+			
+			function readFile(files) {
+				var fileReader = new FileReader();
+					fileReader.readAsArrayBuffer(files[0]);
+					fileReader.onload = function(e) {
+						playAudioFile(e.target.result);
+						//console.log(("Filename: '" + files[0].name + "'"), ( "(" + ((Math.floor(files[0].size/1024/1024*100))/100) + " MB)" ));
+					}
+			}
+			function playAudioFile(file) {
+				audioContext.decodeAudioData(file, function(buffer) {
+						 source = audioContext.createBufferSource();
+							source.buffer = buffer;
+							source.loop = false;
+							source.connect(audioContext.destination);
+							source.connect(analyser)
+							source.connect(analyser1)
+												});
+			}
+		
+		
+	
+		
+			
+			////////////////////////////////////////
 			var theData = {
 				harmonics : [],
 				decibels : []
@@ -75,14 +119,9 @@
 			 console.log(event.target.value);
 			 tuner.setTemperament(event.target.value);
 		 });
-		
-		// listen for fundamental change
-		let fundamental = document.querySelector('#fundamental');
-		if (fundamental) fundamental.addEventListener('input', function(event) {
-			console.log(event.target.value);
-			tuner.setFundamental(event.target.value);
-		});
-				  
+
+				
+				var ac;
 				
 		function updatePitch( time ) {
 			
@@ -95,7 +134,7 @@
 			
 			var cycles = new Array;
 			analyser.getFloatTimeDomainData( buf );
-			var ac = autoCorrelate( buf, audioContext.sampleRate );
+			 ac = autoCorrelate( buf, audioContext.sampleRate );
 			if (ac == -1) {
 				detectorElem.className = "vague";
 				pitchElem.innerText = "--";
@@ -137,8 +176,6 @@
 		
 		// get harmonics of fundamental
 		function getHarmonics(e){
-			
-			
 			theData = {
 				harmonics : [],
 				decibels : [],
@@ -179,38 +216,66 @@
 		// push data to json
 				
 		// add listener to all buttons
-		document.querySelectorAll('button').forEach(btn => {
-		   btn.addEventListener('click', e => {
+		document.querySelector('#analyze').addEventListener("click", function(e) {
+							playing = true
 			   tempData = [];
-			
+			var timeout
+		
 			   // wait 1 second
-			   setTimeout(function timer() {
+			   //setTimeout(function timer() {
 				   console.log("starting...")
-
-				   // push 2000 sets of data, at 25ms interval
-				   for (let i = 1; i < 100; i++) {
-					 setTimeout(function timer() {
-						 if(theData.decibels[0] ){ tempData.push(theData.decibels)   }
-						 console.log("training... step " + (i+ 1));
-						 if(i == 99){saveData()}
-					 }, i * 25);
+				   source.start(0);
+				  
+				   source.onended = onEnded;
+				   function onEnded() {
+					   console.log('stoppped')
+					   //clearTimeout(timeout);
+					   saveData();
+					 //  source.disconnect(analyser)
+					 //document.getElementById("startButton").disabled = false;
+					 playing = false
+					 
 				   }
-			   }, 1000);
+				   // push 2000 sets of data, at 25ms interval
+								   for (let i = 1; i < 1000000; i++) {
+									
+									   if(!playing){//saveData();
+										  i = 1000000
+										   clearTimeout(timeout);
+										   break;
+									   } else {
+										   timeout =	setTimeout(function timer() {
+											 if(theData.decibels[0] && ac !== -1 ){ tempData.push(theData.decibels)   }
+											 console.log("training... step " + (i+ 1));
+											 
+										 }, i * 25);
+									   }
+								   }
+								   
+								   
+					
+			
+				   
+				   
+				   
+			   //}, 1000);
 			   
 			   function saveData(){
 				   console.log("training done")
-				   exportJSON(tempData, btn.id + '.json');
+				   
+				   var inst = document.getElementById("instrument");
+				   
+				   
+				   exportJSON(tempData, inst.value + '.json');
 			   }
 			});
-		});
+		
 				
 
 
 // normalize values in range of 0 to 1
 function normalize(val, max) { return (val - 0) / (max - 0); }
 
-
-	
 	// export json
 	function exportJSON(e, filename) {
 		let link = document.createElement('a');
